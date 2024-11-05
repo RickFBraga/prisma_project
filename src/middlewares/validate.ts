@@ -19,8 +19,6 @@ export const validateSchema = (schema: ObjectSchema) => {
     };
 };
 
-
-
 export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -38,4 +36,16 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
         console.error("Token verification failed:", error);
         res.status(403).json({ message: "Forbidden" });
     }
+};
+
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction): void => {
+    console.error("An error occurred:", err);
+
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const status = err.status || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
 };

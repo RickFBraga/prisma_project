@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import router from './routes/router';
 import cors from 'cors'
+import { errorHandler } from '../src/middlewares/validate';
 
 dotenv.config();
 const app = express();
@@ -9,6 +10,7 @@ const app = express();
 app.use(express.json())
 app.use(cors());
 app.use(router)
+app.use(errorHandler)
 
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).send("I’m OK!");

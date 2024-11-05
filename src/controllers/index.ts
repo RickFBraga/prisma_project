@@ -1,25 +1,26 @@
 import { Request, Response } from "express";
 import { AuthenticatedRequest, CredentialsInterface, SignIn, SignUp } from "../protocols";
-import prisma from "../database/database";
+import { PrismaClient, User, Credential } from "@prisma/client";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import Cryptr from "cryptr";
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 
-dotenv.config()
+dotenv.config();
 
-const encryptedKey = process.env.ENCRYPTION_KEY
+const prisma = new PrismaClient();
+const encryptedKey = process.env.ENCRYPTION_KEY;
 
 if (!encryptedKey) {
     throw new Error("ENCRYPTION_KEY is not defined in the environment variables");
 }
-const cryptr = new Cryptr(encryptedKey)
+const cryptr = new Cryptr(encryptedKey);
 
 export const signUp = async (req: Request, res: Response): Promise<void> => {
     const { email, name, password }: SignUp = req.body;
 
     try {
-        const existingUser = await prisma.user.findUnique({
+        const existingUser: User | null = await prisma.user.findUnique({
             where: { email }
         });
 
@@ -30,7 +31,7 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = await prisma.user.create({
+        const newUser: User = await prisma.user.create({
             data: {
                 email,
                 name,
@@ -49,7 +50,7 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
     const { email, password }: SignIn = req.body;
 
     try {
-        const existingUser = await prisma.user.findUnique({
+        const existingUser: User | null = await prisma.user.findUnique({
             where: { email }
         });
 
@@ -78,18 +79,18 @@ export const signIn = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-
 export const Credentials = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { password, title, url, username }: CredentialsInterface = req.body;
 
     try {
         if (req.userId === undefined) {
             res.status(400).json({ message: "User ID is required" });
-            return
+            return;
         }
+
         const encryptedPassword = cryptr.encrypt(password);
 
-        const newCredential = await prisma.credential.create({
+        const newCredential: Credential = await prisma.credential.create({
             data: {
                 title,
                 url,
@@ -108,7 +109,7 @@ export const Credentials = async (req: AuthenticatedRequest, res: Response): Pro
 
 export const getAllCredentials = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-        const credentials = await prisma.credential.findMany({
+        const credentials: Credential[] = await prisma.credential.findMany({
             where: {
                 userId: req.userId
             }
@@ -130,7 +131,7 @@ export const getCredentialById = async (req: AuthenticatedRequest, res: Response
     const { id } = req.params;
 
     try {
-        const credential = await prisma.credential.findUnique({
+        const credential: Credential | null = await prisma.credential.findUnique({
             where: {
                 id: Number(id),
                 userId: req.userId
@@ -159,7 +160,7 @@ export const updateCredential = async (req: AuthenticatedRequest, res: Response)
     const { title, url, username, password }: CredentialsInterface = req.body;
 
     try {
-        const existingCredential = await prisma.credential.findUnique({
+        const existingCredential: Credential | null = await prisma.credential.findUnique({
             where: { id: Number(id) }
         });
 
@@ -192,8 +193,7 @@ export const deleteCredential = async (req: AuthenticatedRequest, res: Response)
     const { id } = req.params;
 
     try {
-
-        const existingCredential = await prisma.credential.findUnique({
+        const existingCredential: Credential | null = await prisma.credential.findUnique({
             where: { id: Number(id) }
         });
 
@@ -213,4 +213,23 @@ export const deleteCredential = async (req: AuthenticatedRequest, res: Response)
     }
 };
 
+export const eraseAllCredentials = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.userId) {
+            res.status(400).json({ message: "User ID is required" });
+            return;
+        }
+
+        await prisma.credential.deleteMany({
+            where: {
+                userId: req.userId
+            }
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 

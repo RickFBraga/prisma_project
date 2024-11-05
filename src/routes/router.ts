@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signUp, signIn, Credentials, updateCredential, deleteCredential, getAllCredentials, getCredentialById } from '../controllers';
+import { signUp, signIn, Credentials, updateCredential, deleteCredential, getAllCredentials, getCredentialById, eraseAllCredentials } from '../controllers';
 import { authenticateToken, validateSchema } from '../middlewares/validate';
 import { credentialSchema, signInSchema, signUpSchema } from '../schemas/schema';
 
@@ -18,5 +18,7 @@ router.get('/credentials/:id', authenticateToken, getCredentialById);
 router.put('/credentials/:id', authenticateToken, validateSchema(credentialSchema), updateCredential);
 
 router.delete('/credentials/:id', authenticateToken, deleteCredential);
+
+router.delete("/erase", authenticateToken, eraseAllCredentials);
 
 export default router;

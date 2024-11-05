@@ -74,7 +74,7 @@ function main() {
 }
 main()
     .catch(function (e) {
-    console.error(e);
+    console.error("Erro ao rodar o seed:", e);
     process.exit(1);
 })
     .finally(function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -83,6 +83,7 @@ main()
             case 0: return [4 /*yield*/, prisma.$disconnect()];
             case 1:
                 _a.sent();
+                console.log("Seed concluído.");
                 return [2 /*return*/];
         }
     });
