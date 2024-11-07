@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import { signUp, signIn, Credentials, updateCredential, deleteCredential, getAllCredentials, getCredentialById, eraseAllCredentials } from '../controllers';
+import { Credentials, updateCredential, deleteCredential, getAllCredentials, getCredentialById, eraseAllCredentials } from '../controllers/credentials';
 import { authenticateToken, validateSchema } from '../middlewares/validate';
 import { credentialSchema, signInSchema, signUpSchema } from '../schemas/schema';
+import { signIn } from '../controllers/auth/signIn'
+import { signUp } from '../controllers/auth/signUp';
 
 const router = Router();
 
